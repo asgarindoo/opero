@@ -30,6 +30,80 @@ function getSupabaseAdmin() {
   });
 }
 
+type SupabaseAdminClient = ReturnType<typeof getSupabaseAdmin>;
+
+function isStorageNotFoundError(error: unknown) {
+  const storageError = error as { message?: string; status?: number; statusCode?: string | number };
+  return (
+    storageError.status === 404 ||
+    storageError.statusCode === 404 ||
+    storageError.statusCode === "404" ||
+    /bucket not found|not found/i.test(storageError.message ?? "")
+  );
+}
+
+async function listStorageObjectPaths(
+  supabase: SupabaseAdminClient,
+  bucket: string,
+  prefix: string
+): Promise<string[]> {
+  const bucketClient = supabase.storage.from(bucket);
+  const paths: string[] = [];
+  const pageSize = 1000;
+
+  async function walk(folder: string) {
+    for (let offset = 0; ; offset += pageSize) {
+      const { data, error } = await bucketClient.list(folder, {
+        limit: pageSize,
+        offset,
+      });
+
+      if (error) {
+        if (isStorageNotFoundError(error)) return;
+        throw error;
+      }
+
+      const entries = data ?? [];
+      for (const entry of entries) {
+        const objectPath = `${folder}/${entry.name}`;
+        if (!entry.id) {
+          await walk(objectPath);
+        } else {
+          paths.push(objectPath);
+        }
+      }
+
+      if (entries.length < pageSize) break;
+    }
+  }
+
+  await walk(prefix.replace(/\/+$/, ""));
+  return paths;
+}
+
+async function removeStoragePrefix(supabase: SupabaseAdminClient, bucket: string, prefix: string) {
+  const bucketClient = supabase.storage.from(bucket);
+  const paths = await listStorageObjectPaths(supabase, bucket, prefix);
+  const chunkSize = 100;
+
+  for (let i = 0; i < paths.length; i += chunkSize) {
+    const { error } = await bucketClient.remove(paths.slice(i, i + chunkSize));
+    if (error) {
+      if (isStorageNotFoundError(error)) return;
+      throw error;
+    }
+  }
+}
+
+export async function deleteTenantStorageObjects(organizationId: string) {
+  const supabase = getSupabaseAdmin();
+
+  await Promise.all([
+    removeStoragePrefix(supabase, TENANT_ASSETS_BUCKET, `${TENANT_LOGO_FOLDER}/${organizationId}`),
+    removeStoragePrefix(supabase, TENANT_FILES_BUCKET, `tenants/${organizationId}`),
+  ]);
+}
+
 function extensionFromMime(mimeType: string) {
   switch (mimeType) {
     case "image/jpeg":
@@ -346,7 +420,7 @@ export async function uploadTenantDocument(params: {
 
   const supabase = getSupabaseAdmin();
   const folder = params.folder ? safeFileName(params.folder) : "uncategorized";
-  
+
   const cleanBaseName = safeFileName(fileNameParts.join("."));
   const objectPath = `tenants/${params.organizationId}/${folder}/${cleanBaseName}_${Date.now()}.${ext}`;
   const buffer = Buffer.from(await params.file.arrayBuffer());

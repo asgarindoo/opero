@@ -10,7 +10,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireTenant } from "@/lib/server/auth-utils";
 import { canDeleteTenant } from "@/lib/server/rbac";
-import { uploadTenantLogoFromDataUrl } from "@/lib/server/supabase-storage";
+import { deleteTenantStorageObjects, uploadTenantLogoFromDataUrl } from "@/lib/server/supabase-storage";
 import { z } from "zod";
 
 const CreateTenantSchema = z.object({
@@ -230,6 +230,8 @@ export async function DELETE() {
     if (!canDeleteTenant(role)) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
+
+    await deleteTenantStorageObjects(tenant.id);
 
     await prisma.organization.delete({
       where: { id: tenant.id },

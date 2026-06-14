@@ -269,7 +269,7 @@ export default function SettingsPage() {
       }
 
       await authClient.organization.setActive({ organizationId: null });
-      router.replace("/tenants");
+      window.location.assign(getRootAppUrl("/"));
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to leave tenant.");
@@ -295,7 +295,7 @@ export default function SettingsPage() {
       }
 
       await authClient.organization.setActive({ organizationId: null });
-      router.replace("/tenants");
+      window.location.assign(getRootAppUrl("/"));
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete tenant.");
