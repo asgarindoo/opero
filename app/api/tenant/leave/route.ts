@@ -2,13 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireTenantMember } from "@/lib/server/auth-utils";
 
-/**
- * POST /api/tenant/leave
- * Remove the current user from the active tenant.
- *
- * Owners can leave only when another owner remains. This keeps every tenant
- * recoverable unless it is explicitly deleted by an owner.
- */
+// Owner hanya bisa leave kalau ada owner lain
 export async function POST() {
   try {
     const { tenant, user, role } = await requireTenantMember();

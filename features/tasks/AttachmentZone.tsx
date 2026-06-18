@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import type { Attachment } from "@/features/tasks";
 
-// ── Utilities ──────────────────────────────────────────────────────────────────
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024)        return `${bytes} B`;
@@ -35,7 +34,6 @@ export function fileToAttachment(file: File): Attachment {
   };
 }
 
-// ── Icon ───────────────────────────────────────────────────────────────────────
 
 export function AttachmentTypeIcon({
   type, size = 14,
@@ -50,7 +48,6 @@ export function AttachmentTypeIcon({
   return <File size={size} strokeWidth={sw} style={{ color: "var(--color-on-surface-variant)", opacity: 0.5 } as React.CSSProperties} />;
 }
 
-// ── Drop Zone ──────────────────────────────────────────────────────────────────
 
 interface AttachmentZoneProps {
   attachments: Attachment[];
@@ -64,7 +61,7 @@ export default function AttachmentZone({ attachments, onChange, compact }: Attac
   const [renameVal, setRenameVal] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // ── Drop handlers ──
+
   const onDragOver  = useCallback((e: DragEvent) => { e.preventDefault(); setDragging(true); }, []);
   const onDragLeave = useCallback(() => setDragging(false), []);
 
@@ -83,7 +80,7 @@ export default function AttachmentZone({ attachments, onChange, compact }: Attac
     e.target.value = "";
   }, [attachments, onChange]);
 
-  // ── Actions ──
+
   function removeAttachment(id: string) {
     const att = attachments.find(a => a.id === id);
     if (att?.objectUrl) URL.revokeObjectURL(att.objectUrl);
@@ -112,7 +109,7 @@ export default function AttachmentZone({ attachments, onChange, compact }: Attac
 
   return (
     <div className="space-y-2">
-      {/* ── Existing attachment list ── */}
+      {/* Existing attachment */}
       {attachments.length > 0 && (
         <div className="space-y-1.5">
           {attachments.map(att => (
@@ -202,7 +199,7 @@ export default function AttachmentZone({ attachments, onChange, compact }: Attac
         </div>
       )}
 
-      {/* ── Drop zone ── */}
+      {/* Drop zone */}
       <div
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}

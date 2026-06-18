@@ -84,7 +84,7 @@ export async function getDashboardSummary() {
     };
   }
 
-  // ── Active tasks (top 5) ────────────────────────────────────────────────
+  // Active tasks (top 5)
   const activeTasks = tasks.slice(0, 5).map((task: any) => {
     const checklist = getChecklistProgress(task.checklist as Array<{ done: boolean }> | undefined);
     const allAssignees = Array.isArray(task.assignees) ? task.assignees : [];
@@ -104,7 +104,7 @@ export async function getDashboardSummary() {
     };
   });
 
-  // ── Hero stats ──────────────────────────────────────────────────────────
+  // Hero stats
   const todayStr = new Date().toISOString().slice(0, 10);
   const activeTaskCount = tasks.filter((t: any) => t.status !== "Done" && t.status !== "Cancelled").length;
   const dueTodayCount = tasks.filter((t: any) => {
@@ -113,7 +113,7 @@ export async function getDashboardSummary() {
   }).length;
   const openDealsCount = sales.filter((s: any) => s.status !== "Won" && s.status !== "Lost").length;
 
-  // ── Recent activity feed ────────────────────────────────────────────────
+  // Recent activity
   const recentActivity = activityRecords.map((log: any) => ({
     id: log.id,
     icon: ICON_MAP[log.action] ?? "timeline",
@@ -126,7 +126,7 @@ export async function getDashboardSummary() {
     time: log.createdAt.toISOString(),
   }));
 
-  // ── Productivity bars (tasks completed per weekday) ─────────────────────
+  // Productivity
   const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const now = new Date();
   const weekStart = new Date(now);
@@ -157,7 +157,7 @@ export async function getDashboardSummary() {
     { label: "Active tasks", value: String(activeTaskCount), delta: "0", up: true },
   ];
 
-  // ── Team performance ────────────────────────────────────────────────────
+  // Team performance
   const teamMembers = members.map((m: any) => {
     const name = getUserDisplayName(m.user, "Member");
     const assigned = tasks.filter((t: any) => Array.isArray(t.assignees) && t.assignees.some((a: any) => a.id === m.userId));
@@ -176,7 +176,7 @@ export async function getDashboardSummary() {
     };
   });
 
-  // ── Workflow boards ─────────────────────────────────────────────────────
+  // Workflow boards
   const workflowBoards = flows.map((flow: any) => {
     const stages = Array.isArray(flow.stages) ? flow.stages : [];
     const completed = stages.filter((s: any) => s.isCompleted).length;
@@ -192,7 +192,7 @@ export async function getDashboardSummary() {
     };
   });
 
-  // ── Sales pipeline ──────────────────────────────────────────────────────
+  // Sales pipeline
   const pipelineStages = ["Pending", "Processing", "Completed", "Cancelled"].map((label, index) => {
     const count = sales.filter((s: any) => s.status === label || s.stage === label).length;
     const value = sales
@@ -209,7 +209,7 @@ export async function getDashboardSummary() {
     ago: "Updated",
   }));
 
-  // ── Calendar (Content Planner) ──────────────────────────────────────────
+  // Calendar
   const contents = contentRecords.map((r: any) => mapDomainRecord(r));
 
   const calendarEvents = contents

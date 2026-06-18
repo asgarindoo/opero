@@ -410,7 +410,6 @@ export async function uploadTenantDocument(params: {
     throw new Error("Maximum upload size is 30MB.");
   }
 
-  // Validate extension
   const fileNameParts = params.file.name.split(".");
   const ext = fileNameParts.length > 1 ? fileNameParts.pop()?.toLowerCase() || "" : "";
 

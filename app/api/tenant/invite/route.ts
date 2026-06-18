@@ -58,11 +58,6 @@ async function createUniqueInviteLink(organizationId: string, createdById: strin
   throw new Error("Unable to generate a unique invite link");
 }
 
-/**
- * GET /api/tenant/invite
- * Retrieve the permanent invite code for the tenant.
- * If no code exists, generate one.
- */
 export async function GET(req: NextRequest) {
   try {
     const { tenant } = await requirePermission("members.invite");

@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { getDashboardSummary } from "@/features/dashboard/services/dashboard.client";
 
-// ── Types ──────────────────────────────────────────────────────────────────────
 
 export interface TaskItem {
   id: string;
@@ -113,7 +112,6 @@ interface DashboardContextValue {
   refresh: () => void;
 }
 
-// ── Context ────────────────────────────────────────────────────────────────────
 
 const DashboardContext = createContext<DashboardContextValue | undefined>(undefined);
 

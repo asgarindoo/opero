@@ -10,10 +10,6 @@ const JoinSchema = z.object({
   message: "Invite code or link is required",
 });
 
-/**
- * POST /api/tenant/join
- * Join a tenant using a permanent invite code.
- */
 export async function POST(req: NextRequest) {
   try {
     const user = await requireAuth();
@@ -62,7 +58,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "This invite link has expired" }, { status: 410 });
     }
 
-    // Check if user is already a member
+    // Cek sudah member
     const existingMember = await prisma.member.findUnique({
       where: {
         organizationId_userId: {
@@ -79,7 +75,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Join as 'member' (Staff)
     await prisma.$transaction(async (tx) => {
       await tx.member.create({
         data: {

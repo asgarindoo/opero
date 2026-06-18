@@ -1,16 +1,4 @@
-/**
- * OPERO — Server Auth Utilities
- *
- * These functions run on the server only (Server Components, Route Handlers,
- * Server Actions). Never import from client components.
- *
- * Available utilities:
- *   getCurrentUser()         — Get authenticated user or null
- *   getCurrentTenant()       — Get active organization or null
- *   requireAuth()            — Throw if not authenticated
- *   requireTenantAccess()    — Throw if user is not a member of the tenant
- *   requireRole()            — Throw if user does not have one of the required roles
- */
+
 
 import { headers } from "next/headers";
 import { cache } from "react";
@@ -18,8 +6,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizeUserAvatarImage } from "@/lib/server/supabase-storage";
 import { getUserDisplayName } from "@/lib/user-identity";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 export type OrgRole = "owner" | "admin" | "member";
 
@@ -61,13 +47,7 @@ export interface TenantContextResolution {
   failure: TenantContextFailure | null;
 }
 
-// ── Core helpers ──────────────────────────────────────────────────────────────
-
-/**
- * Get the current Better Auth session from request headers.
- * Returns null if no valid session exists.
- * Wrapped in cache() to avoid multiple DB lookups per request.
- */
+// Cache per request biar tidak double query
 export const getSession = cache(async function getSession() {
   try {
     const hdrs = await headers();
@@ -78,12 +58,6 @@ export const getSession = cache(async function getSession() {
   }
 });
 
-// ── Public utilities ──────────────────────────────────────────────────────────
-
-/**
- * Returns the currently authenticated user, or null if not authenticated.
- * Use in Server Components that need to conditionally render auth-gated UI.
- */
 export const getCurrentUser = cache(async function getCurrentUser(): Promise<CurrentUser | null> {
   const session = await getSession();
   if (!session?.user) return null;
@@ -125,10 +99,6 @@ function failedTenantContext(
   };
 }
 
-/**
- * Returns the active organization (tenant) from the current session, or null.
- * The active org is set by `authClient.organization.setActive()` on the client.
- */
 export const getCurrentTenant = cache(async function getCurrentTenant(): Promise<CurrentTenant | null> {
   const session = await getSession();
   if (!session?.session?.activeOrganizationId) return null;
@@ -141,10 +111,6 @@ export const getCurrentTenant = cache(async function getCurrentTenant(): Promise
   return org ?? null;
 });
 
-/**
- * Asserts that the current request is authenticated.
- * Throws a Response with 401 status if not.
- */
 export async function requireAuth(): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) {
@@ -156,11 +122,7 @@ export async function requireAuth(): Promise<CurrentUser> {
   return user;
 }
 
-/**
- * Asserts that the current user is a member of the given tenant (by slug).
- * Returns { tenant, role } if valid.
- * Throws 401 if not authenticated, 403 if not a member.
- */
+// Cek role + membership tenant
 export async function requireTenantAccess(
   slug: string
 ): Promise<TenantMembership> {
@@ -200,15 +162,6 @@ export async function requireTenantAccess(
   return { tenant: org, user, role: membership.role as OrgRole };
 }
 
-/**
- * Asserts that the current user has one of the specified roles in the active tenant.
- * Throws 401 if not authenticated, 403 if role requirement not met.
- *
- * This is an explicit allow-list. Include every role that should pass.
- *
- * @example
- * await requireRole(["owner", "admin"]) // allow owner or admin
- */
 export async function requireRole(
   allowedRoles: OrgRole[]
 ): Promise<TenantContext> {
@@ -224,10 +177,7 @@ export async function requireRole(
   return context;
 }
 
-/**
- * Resolves a tenant slug from the `x-tenant-slug` header injected by middleware.
- * Falls back to the active org in session if header is absent (local dev).
- */
+// Ambil tenant dari header x-tenant-slug yang diset proxy
 export const resolveTenantFromRequest = cache(async function resolveTenantFromRequest(): Promise<CurrentTenant | null> {
   const hdrs = await headers();
   const slugFromHeader = hdrs.get("x-tenant-slug");
@@ -244,14 +194,7 @@ export const resolveTenantFromRequest = cache(async function resolveTenantFromRe
   return getCurrentTenant();
 });
 
-/**
- * Resolves the tenant context from trusted server state only.
- *
- * Shared database/shared schema rule: every tenant-owned query must use
- * `tenantId` from this helper, never a client-provided tenant_id.
- * Proxy injects x-tenant-slug as routing context; server handlers validate
- * authentication, tenant status, and membership here before touching data.
- */
+// Validasi session + tenant + membership sekaligus
 export const resolveTenantContext = cache(async function resolveTenantContext(): Promise<TenantContextResolution> {
   const session = await getSession();
   if (!session?.user) return failedTenantContext(401, "Unauthorized");

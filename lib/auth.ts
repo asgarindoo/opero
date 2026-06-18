@@ -1,15 +1,8 @@
-/**
- * OPERO — Better Auth Server Instance
- *
- * This file is SERVER-ONLY. Never import this in client components.
- * Use `lib/auth-client.ts` for client-side auth operations.
- */
-
 import { betterAuth } from "better-auth";
 import { organization } from "better-auth/plugins";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma"; // Force TS re-evaluation
+import { prisma } from "@/lib/prisma";
 import { generateInviteCode } from "@/lib/utils/invite-code";
 
 const rootAuthUrl =
@@ -17,13 +10,10 @@ const rootAuthUrl =
   process.env.NEXT_PUBLIC_ROOT_URL ??
   "http://lvh.me:3000";
 const rootHostname = new URL(rootAuthUrl).hostname;
-const rootDomain  = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? rootHostname;
+const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? rootHostname;
 const isLoopbackHost = rootHostname === "localhost" || rootHostname === "127.0.0.1";
 
-// Cookie domain strategy:
-//   lvh.me/prod: set a shared root domain so subdomains share the cookie.
-//   localhost:   omit domain entirely; localhost cannot reliably share cookies
-//                with *.localhost in browsers.
+// Localhost tidak bisa share cookie antar subdomain
 const cookieDomain = !isLoopbackHost
   ? (process.env.BETTER_AUTH_COOKIE_DOMAIN ?? rootDomain)
   : undefined;
@@ -54,40 +44,28 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
 
-  // ── Email + Password ────────────────────────────────────────────────
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false, // enable in production
+    requireEmailVerification: false, // aktifkan di production
     minPasswordLength: 8,
   },
 
-  // ── Session ─────────────────────────────────────────────────────────
   session: {
-    // Session expiry: 30 days
-    expiresIn: 60 * 60 * 24 * 30,
-    // Extend session on activity
-    updateAge: 60 * 60 * 24, // re-validate once per day
-    // Keep Better Auth from storing full session/user data in cookies.
-    // That cache can be chunked into many Set-Cookie headers and break
-    // organization.setActive() with ERR_RESPONSE_HEADERS_TOO_BIG.
+    expiresIn: 60 * 60 * 24 * 30, // 30 hari
+    updateAge: 60 * 60 * 24,
+    // Disable cookie cache biar tidak kena ERR_RESPONSE_HEADERS_TOO_BIG
     cookieCache: {
       enabled: false,
     },
   },
 
-  // ── Organization Plugin (= Tenant in OPERO) ─────────────────────────
   plugins: [
     organization({
-      // Allow any authenticated user to create an organization
       allowUserToCreateOrganization: true,
-
-      // Supported roles: owner > admin > member (staff in OPERO)
-      // "owner" and "admin" are built-in; "member" maps to "staff" role in OPERO UI
       membershipLimit: 200,
 
-      // Set up invitation email (no-op stub — add email provider later)
+      // TODO: kirim email beneran nanti
       async sendInvitationEmail(data) {
-        // TODO: Replace with real email send (e.g., Resend)
         console.log(
           `[OPERO] Invitation created for ${data.email} to join "${data.organization.name}"`,
           `\n  Invite ID: ${data.id}`,
@@ -95,13 +73,12 @@ export const auth = betterAuth({
         );
       },
 
-      // Auto-create TenantSettings + seed free plan after org creation
       organizationHooks: {
         afterCreateOrganization: async ({ organization: org }) => {
           try {
             await assignUniqueInviteCode(org.id);
 
-            // Seed free plan if not already in DB
+            // Upsert free plan kalau belum ada
             const freePlan = await prisma.subscriptionPlan.upsert({
               where: { name: "free" },
               create: {
@@ -112,12 +89,10 @@ export const auth = betterAuth({
               update: {},
             });
 
-            // Create tenant settings record
             await prisma.tenantSettings.create({
               data: { organizationId: org.id },
             });
 
-            // Create tenant plan record (free by default)
             await prisma.tenantPlan.create({
               data: {
                 organizationId: org.id,
@@ -126,7 +101,7 @@ export const auth = betterAuth({
               },
             });
           } catch (err) {
-            // Non-fatal: settings/plan creation failure shouldn't block org creation
+            // Non-fatal, jangan block org creation
             console.error("[OPERO] Failed to seed tenant settings:", err);
           }
         },
@@ -134,7 +109,6 @@ export const auth = betterAuth({
     }),
   ],
 
-  // ── Trusted Origins ─────────────────────────────────────────────────
   trustedOrigins: [
     rootAuthUrl,
     "http://*.localhost:3000",
@@ -145,13 +119,13 @@ export const auth = betterAuth({
 
   ...(cookieDomain
     ? {
-        advanced: {
-          crossSubDomainCookies: {
-            enabled: true,
-            domain: cookieDomain,
-          },
+      advanced: {
+        crossSubDomainCookies: {
+          enabled: true,
+          domain: cookieDomain,
         },
-      }
+      },
+    }
     : {}),
 });
 

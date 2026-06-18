@@ -25,7 +25,6 @@ export interface NavItem {
   id: string;
   label: string;
   icon: LucideIcon;
-  /** Material Symbols icon name for command palette */
   materialIcon: string;
   href: string;
   badge?: number;

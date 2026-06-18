@@ -4,10 +4,6 @@ import { requirePermission } from "@/lib/server/rbac";
 import { normalizeUserAvatarImage } from "@/lib/server/supabase-storage";
 import { getUserDisplayName } from "@/lib/user-identity";
 
-/**
- * GET /api/tenant/members
- * Fetch all members for the active tenant.
- */
 export async function GET() {
   try {
     const { tenant, role } = await requirePermission("members.read");
@@ -27,7 +23,6 @@ export async function GET() {
       orderBy: { createdAt: "asc" },
     });
 
-    // Map Prisma Member to UI Member type
     const mappedMembers = members.map((m) => ({
       id: m.id,
       userId: m.userId,

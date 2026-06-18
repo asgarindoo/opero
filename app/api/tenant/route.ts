@@ -1,9 +1,3 @@
-/**
- * OPERO — Tenant Route Handler
- * GET  /api/tenant  → List all organizations the current user belongs to
- * POST /api/tenant  → Create a new organization (tenant)
- */
-
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
@@ -43,7 +37,7 @@ function isOrganizationExistsError(err: unknown) {
   );
 }
 
-// ── GET /api/tenant ───────────────────────────────────────────────────────────
+// GET /api/tenant
 export async function GET() {
   try {
     const user = await requireAuth();
@@ -83,7 +77,7 @@ export async function GET() {
   }
 }
 
-// ── POST /api/tenant ──────────────────────────────────────────────────────────
+// POST /api/tenant
 export async function POST(req: NextRequest) {
   try {
     const user = await requireAuth();
@@ -127,7 +121,7 @@ export async function POST(req: NextRequest) {
 
     const { name, slug, logo } = parsed.data;
 
-    // Check slug availability
+    // Cek slug sudah dipakai
     const existing = await prisma.organization.findUnique({
       where: { slug },
       select: { id: true },
@@ -220,10 +214,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/**
- * DELETE /api/tenant
- * Permanently delete the active tenant. Owner-only.
- */
+// DELETE /api/tenant — owner only
 export async function DELETE() {
   try {
     const { tenant, role } = await requireTenant();

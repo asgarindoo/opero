@@ -1,10 +1,3 @@
-﻿/**
- * Client-side tenant URL helpers.
- *
- * NEXT_PUBLIC_ROOT_URL is the single source of truth — matches the proxy's ROOT_URL.
- * This ensures port numbers are always preserved (e.g. :3000 in local dev).
- */
-
 const ROOT_URL =
   process.env.NEXT_PUBLIC_ROOT_URL ||
   (typeof window !== "undefined" ? `${window.location.protocol}//${window.location.host}` : "http://lvh.me:3000");
@@ -17,24 +10,12 @@ export function isValidTenantSlug(slug: unknown): slug is string {
   return typeof slug === "string" && /^[a-z0-9-]{2,30}$/.test(slug);
 }
 
-/**
- * Build the root app URL for a given path.
- *
- *   getRootAppUrl("/login") → "http://lvh.me:3000/login"
- */
 export function getRootAppUrl(path = "/") {
   const root = getRootParsed();
   const url = new URL(path, root.href);
   return url.toString();
 }
 
-/**
- * Build the tenant dashboard URL for a given slug.
- * Port is always taken from NEXT_PUBLIC_ROOT_URL — never lost.
- *
- *   getTenantDashboardUrl("myotic")           → "http://myotic.lvh.me:3000/dashboard"
- *   getTenantDashboardUrl("myotic", "/tasks") → "http://myotic.lvh.me:3000/tasks"
- */
 export function getTenantDashboardUrl(slug: string, path = "/dashboard"): string {
   if (!isValidTenantSlug(slug)) return getRootAppUrl("/tenants");
 

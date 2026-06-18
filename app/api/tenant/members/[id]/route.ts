@@ -12,10 +12,6 @@ const UpdateMemberSchema = z.object({
   status: z.enum(["active", "suspended"]).optional(),
 });
 
-/**
- * PATCH /api/tenant/members/[id]
- * Update member role, department, or position.
- */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -34,7 +30,6 @@ export async function PATCH(
       );
     }
 
-    // Verify member belongs to this tenant
     const member = await prisma.member.findUnique({
       where: { id: memberId },
     });
@@ -88,10 +83,6 @@ export async function PATCH(
   }
 }
 
-/**
- * DELETE /api/tenant/members/[id]
- * Remove/Suspending a member from the tenant.
- */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -112,7 +103,6 @@ export async function DELETE(
       return NextResponse.json({ error: "Only owners can remove admins or other owners" }, { status: 403 });
     }
 
-    // Prevent removing the last owner.
     if (member.role === "owner") {
       const ownerCount = await prisma.member.count({
         where: { organizationId: tenant.id, role: "owner" },

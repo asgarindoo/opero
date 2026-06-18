@@ -1,11 +1,7 @@
 import { randomBytes, randomInt } from "crypto";
 
-/**
- * Generates a random, non-predictable tenant invite code.
- * Format: OP-XXXX-XXXX
- */
 export function generateInviteCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Avoid ambiguous chars like I, O, 0, 1
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Hindari karakter ambigu I, O, 0, 1
   const segment = () => {
     let res = "";
     for (let i = 0; i < 4; i++) {

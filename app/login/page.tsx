@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -118,11 +118,10 @@ export default function LoginPage() {
       console.log(`[LOGIN] callbackUrl=${callbackUrl ?? "(none)"}`);
       console.log(`[LOGIN] callbackTenantSlug=${callbackTenantSlug ?? "(none)"}`);
 
-      // ── Routing decision ───────────────────────────────────────────────────
+      // Routing decision
       // 1. callbackUrl -> user was trying to reach a specific tenant, go directly.
       // 2. Only 1 org -> go directly (no choice needed).
       // 3. Multiple orgs + no callback -> show /tenants picker so the user can choose.
-      //    (The /tenants page also handles the single-org fast-path internally.)
 
       if (callbackTenantSlug && !callbackOrg) {
         console.log("[LOGIN] callback tenant not in user's org list -> /unauthorized");
@@ -180,7 +179,7 @@ export default function LoginPage() {
         }}
       />
 
-      {/* ── Left brand panel ── */}
+      {/* Left panel */}
       <aside className="hidden lg:flex flex-col justify-between w-[480px] xl:w-[540px] shrink-0 p-12 xl:p-16 bg-[#0f0f0f] relative overflow-hidden rounded-r-[2.5rem]">
         <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         <div
@@ -226,7 +225,7 @@ export default function LoginPage() {
         <p className="font-body-sm text-[12px] text-white/20 relative z-10">© 2026 OPERO. All rights reserved.</p>
       </aside>
 
-      {/* ── Right form panel ── */}
+      {/* Right form */}
       <main className="flex-1 flex flex-col items-center justify-center px-5 sm:px-10 py-16">
         <div className="lg:hidden mb-10">
           <Link href="/" className="font-display font-bold tracking-[-0.05em] text-primary" style={{ fontSize: 26 }}>

@@ -14,7 +14,7 @@ interface SalesContextType {
   updateSale: (id: string, updates: Partial<SaleOpportunity>) => void;
   addActivity: (saleId: string, activity: Omit<SaleActivity, "id" | "timestamp" | "author"> & { author?: string }) => void;
   deleteSales: (ids: string[]) => void;
-  /** Callback bridge: when a sale is marked Paid, this fires so Finance can record income */
+  // Callback buat Finance saat sale dibayar
   onSalePaid?: (sale: SaleOpportunity) => void;
   setSalePaidCallback: (cb: ((sale: SaleOpportunity) => void) | undefined) => void;
   loading: boolean;
@@ -55,7 +55,6 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
     setOnSalePaid(() => cb);
   }, []);
 
-  /** Compute subtotal and total from items */
   function computeTotals(items: SaleItem[], discountTotal = 0, taxAmount = 0) {
     const subtotal = items.reduce((acc, item) => acc + item.subtotal, 0);
     const total = Math.max(0, subtotal - discountTotal + taxAmount);
@@ -115,19 +114,18 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
         updatedAt: new Date().toISOString()
       };
 
-      // Recompute totals if items or discount or tax changes
       if (updates.items || updates.discountTotal !== undefined || updates.taxAmount !== undefined) {
         const { subtotal, total } = computeTotals(updated.items, updated.discountTotal || 0, updated.taxAmount || 0);
         updated.subtotal = subtotal;
         updated.total = total;
       }
 
-      // Auto-trigger Finance income record when paymentStatus → Paid
+      // Trigger Finance kalau status bayar berubah ke Paid
       if (updates.paymentStatus === "Paid" && s.paymentStatus !== "Paid") {
         onSalePaid?.(updated);
       }
 
-      // Auto-deduct stock when status → Completed for Product Sales
+      // Kurangi stok saat sale selesai
       if (updates.status === "Completed" && s.status !== "Completed" && updated.items.length > 0) {
         (async () => {
           try {

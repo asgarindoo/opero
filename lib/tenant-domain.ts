@@ -1,7 +1,3 @@
-/**
- * @deprecated Use lib/routing.ts instead.
- * This file re-exports from lib/routing.ts for backward compatibility.
- */
 export {
   extractTenantSlugFromHost,
   isRootHost,
@@ -13,10 +9,9 @@ export {
   buildTenantUrl as buildTenantUrlFromHost,
 } from "@/lib/routing";
 
-/** @deprecated Use buildTenantUrl from lib/routing.ts */
 export function getTenantHost(host: string, slug: string): string {
   const { port } = (() => {
-    const idx  = host.lastIndexOf(":");
+    const idx = host.lastIndexOf(":");
     const after = host.slice(idx + 1);
     return /^\d+$/.test(after) ? { port: after } : { port: "" };
   })();
@@ -26,9 +21,8 @@ export function getTenantHost(host: string, slug: string): string {
   return port ? `${slug}.${appDomain}:${port}` : `${slug}.${appDomain}`;
 }
 
-/** @deprecated Use buildRootUrl from lib/routing.ts */
 export function getRootHost(host: string): string {
-  const idx   = host.lastIndexOf(":");
+  const idx = host.lastIndexOf(":");
   const after = host.slice(idx + 1);
   if (/^\d+$/.test(after)) {
     const appDomain = new URL(

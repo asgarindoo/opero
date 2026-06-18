@@ -1,11 +1,4 @@
-/**
- * OPERO — Prisma Client Singleton
- *
- * Prevents multiple Prisma Client instances during Next.js hot reload in development.
- * See: https://www.prisma.io/docs/guides/other/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
- */
-
-import { PrismaClient } from "@prisma/client"; // Force TS re-evaluation
+import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 
