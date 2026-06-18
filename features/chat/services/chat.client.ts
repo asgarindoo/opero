@@ -16,10 +16,6 @@ export function getSupabaseBrowserClient() {
   if (!globalThis.__operoSupabaseRealtimeClient) {
     globalThis.__operoSupabaseRealtimeClient = createClient(supabaseUrl, supabaseKey, {
       auth: {
-        // Supabase auth is not used — better-auth manages sessions.
-        // persistSession and autoRefreshToken are disabled to keep the client
-        // lightweight, but detectSessionInUrl must be false too so the client
-        // doesn't try to parse auth callbacks from the URL.
         persistSession: false,
         autoRefreshToken: false,
         detectSessionInUrl: false,

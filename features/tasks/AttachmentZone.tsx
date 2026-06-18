@@ -52,12 +52,12 @@ export function AttachmentTypeIcon({
 interface AttachmentZoneProps {
   attachments: Attachment[];
   onChange: (next: Attachment[]) => void;
-  compact?: boolean;   // smaller footprint for modal use
+  compact?: boolean;
 }
 
 export default function AttachmentZone({ attachments, onChange, compact }: AttachmentZoneProps) {
   const [dragging, setDragging]   = useState(false);
-  const [renaming, setRenaming]   = useState<string | null>(null);   // attachment id
+  const [renaming, setRenaming]   = useState<string | null>(null);
   const [renameVal, setRenameVal] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 

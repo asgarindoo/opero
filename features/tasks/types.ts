@@ -28,7 +28,7 @@ export interface Reaction {
   emoji: string;
   count: number;
   reactedByMe: boolean;
-  reactors: string[]; // member names
+  reactors: string[]; //nama member
 }
 
 export interface Comment {
@@ -40,8 +40,8 @@ export interface Comment {
   avatar?: string | null;
   body: string;
   timestamp: string;
-  reactions?: Record<string, Reaction>; // emoji → Reaction
-  mentions?: string[]; // member ids mentioned
+  reactions?: Record<string, Reaction>;
+  mentions?: string[];
 }
 
 export interface ActivityEntry {
@@ -56,11 +56,11 @@ export interface ActivityEntry {
 export interface Attachment {
   id: string;
   name: string;
-  size: string;          // human-readable e.g. "2.4 MB"
+  size: string;
   type: "pdf" | "image" | "doc" | "sheet" | "other";
-  objectUrl?: string;    // URL.createObjectURL for client-side preview/download
-  mimeType?: string;     // original MIME type
-  uploadedAt?: string;   // ISO date string
+  objectUrl?: string;
+  mimeType?: string;
+  uploadedAt?: string;
 }
 
 export interface Task {
@@ -112,7 +112,6 @@ export const STATUS_META: Record<Status, { color: string; bg: string; dot: strin
   "Cancelled": { color: "rgba(0,0,0,0.3)", bg: "rgba(0,0,0,0.035)", dot: "rgba(0,0,0,0.2)" },
 };
 
-// Simpan label di localStorage
 
 const LABEL_STORAGE_KEY = "opero_task_labels";
 

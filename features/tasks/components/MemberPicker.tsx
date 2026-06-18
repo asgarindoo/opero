@@ -29,7 +29,6 @@ export default function MemberPicker({ selected, onChange, max }: Props) {
   const [open,    setOpen]    = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
 
-  // Load tenant members once on mount
   useEffect(() => {
     fetch("/api/tenant/members")
       .then((r) => r.json())
@@ -37,7 +36,7 @@ export default function MemberPicker({ selected, onChange, max }: Props) {
         if (data.members) {
           setMembers(
             (data.members as ApiMember[]).map((m) => ({
-              id: m.userId,          // use userId so assignments reference the user
+              id: m.userId,
               name: getUserDisplayName(m, "Member"),
               email: m.email,
               image: m.image,

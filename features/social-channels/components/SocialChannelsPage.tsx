@@ -120,7 +120,7 @@ export default function SocialChannelsPage() {
 
    const SCHEDULED = useMemo(() => (contentPosts || [])
       .filter((p: any) => p.status !== "Published" && p.status !== "Archived")
-      .slice(0, 4) // Batasi ke 4
+      .slice(0, 4)
       .map((p: any) => ({
          id: p.id,
          title: p.title,
@@ -131,7 +131,7 @@ export default function SocialChannelsPage() {
       })), [channelNamesById, contentPosts]);
 
    const ACTIVITY = useMemo(() => (activities || [])
-      .slice(0, 5) // Batasi ke 5
+      .slice(0, 5)
       .map((act: any) => {
          const date = new Date(act.time);
          const isToday = date.toDateString() === new Date().toDateString();

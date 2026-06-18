@@ -112,7 +112,6 @@ export default function ListView({ tasks, groupBy, onTaskClick, onAddTask, searc
         .map(p => ({ key: p, label: PRIORITY_META[p].label, tasks: filtered.filter(t => t.priority === p) }))
         .filter(g => g.tasks.length > 0);
     }
-    // assignee
     const byAssignee: Record<string, { key: string; label: string; tasks: Task[] }> = {
       unassigned: { key: "unassigned", label: "Unassigned", tasks: [] },
     };
@@ -158,7 +157,7 @@ export default function ListView({ tasks, groupBy, onTaskClick, onAddTask, searc
         const sm = STATUS_META[group.key as Status];
         return (
           <div key={group.key}>
-            {/* ── Group header ── */}
+            {/* Group header */}
             <div
               className="flex items-center gap-2 px-4 py-2 sticky top-0 z-10 cursor-pointer hover:bg-black/[0.015] transition-colors bg-[#fef8f8]"
               style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}
@@ -183,7 +182,7 @@ export default function ListView({ tasks, groupBy, onTaskClick, onAddTask, searc
               </span>
             </div>
 
-            {/* ── Task rows ── */}
+            {/* Task rows */}
             {!isCollapsed && (
               <>
                 {group.tasks.map(task => (

@@ -68,9 +68,9 @@ function mapChannel(c: any) {
     accountName,
     title: c.title || accountName,
     platform: c.platform || "",
-    username: handle, // alias for backward compat
+    username: handle,
     handle,
-    profileLink: profileUrl, // alias for backward compat
+    profileLink: profileUrl,
     profileUrl,
     status: c.status || "Active",
     followers: mappedStat(c, payload, "followers"),

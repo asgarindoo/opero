@@ -100,7 +100,6 @@ export default function SettingsPage() {
     try {
       await navigator.clipboard.writeText(text);
     } catch {
-      // Fallback for older browsers
       const el = document.createElement("textarea");
       el.value = text;
       el.style.position = "fixed";

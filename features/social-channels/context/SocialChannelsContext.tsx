@@ -91,7 +91,7 @@ export function SocialChannelsProvider({ children }: { children: React.ReactNode
   const value = useMemo(() => ({
     channels,
     loading: isLoading,
-    setChannels: () => {}, // unused but kept for interface compat if needed
+    setChannels: () => {},
 
     addChannel,
     updateChannel,

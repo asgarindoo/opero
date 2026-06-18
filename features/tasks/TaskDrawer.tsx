@@ -101,7 +101,6 @@ export default function TaskDrawer({ task, allTasks, onClose, onUpdate, onDelete
     const actor = getUserDisplayName(user, "System");
     const timestamp = new Date().toLocaleString();
 
-    // Only log if there's a specific action to describe
     if (actionDesc) {
       const newActivity = {
         id: `a${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -144,7 +143,7 @@ export default function TaskDrawer({ task, allTasks, onClose, onUpdate, onDelete
       if (c.id !== commentId) return c;
       return { ...c, reactions: toggleReaction(c.reactions ?? {}, emoji) };
     });
-    handleUpdate({ comments }); // Intentionally no activity log for reactions
+    handleUpdate({ comments });
   }
 
   const otherTasks = allTasks.filter(t => t.id !== task.id);

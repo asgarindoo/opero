@@ -26,28 +26,28 @@ export default function TimelineView({ tasks, onTaskClick }: Props) {
       const start = t.startDate || t.created || t.due!;
       return [start, t.due!];
     });
-    
+
     const minDate = dates.reduce((a, b) => a < b ? a : b);
     const maxDate = dates.reduce((a, b) => a > b ? a : b);
-    const total   = Math.max(30, daysBetween(minDate, maxDate) + 6);
+    const total = Math.max(30, daysBetween(minDate, maxDate) + 6);
 
     const pos = withDates.map(t => {
       const startStr = t.startDate || t.created || t.due!;
-      const start  = dayOffset(startStr, minDate);
-      const end    = dayOffset(t.due!, minDate);
-      const width  = Math.max(1, end - start);
+      const start = dayOffset(startStr, minDate);
+      const end = dayOffset(t.due!, minDate);
+      const width = Math.max(1, end - start);
       return { task: t, start, end, width };
     });
 
     return { baseDate: minDate, totalDays: total, tasksWithPos: pos };
   }, [tasks]);
 
-  const DAY_W  = 32;  // px per day column
-  const ROW_H  = 36;
+  const DAY_W = 32;
+  const ROW_H = 36;
   const LABEL_W = 240;
 
-  const today     = new Date().toISOString().slice(0, 10);
-  const todayOff  = baseDate ? dayOffset(today, baseDate) : -1;
+  const today = new Date().toISOString().slice(0, 10);
+  const todayOff = baseDate ? dayOffset(today, baseDate) : -1;
 
   const statusGroups = ALL_STATUSES.map(s => ({
     status: s,
@@ -62,7 +62,6 @@ export default function TimelineView({ tasks, onTaskClick }: Props) {
     );
   }
 
-  // Build day header labels
   const dayHeaders: { offset: number; label: string }[] = [];
   for (let i = 0; i < totalDays; i += 7) {
     const d = new Date(baseDate);
@@ -73,7 +72,7 @@ export default function TimelineView({ tasks, onTaskClick }: Props) {
   return (
     <div className="flex-1 overflow-auto db-sidebar">
       <div style={{ minWidth: LABEL_W + totalDays * DAY_W + 32 }}>
-        {/* ── Header row ── */}
+        {/* Header row */}
         <div className="flex sticky top-0 z-20 bg-[#fef8f8]" style={{ borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
           <div style={{ width: LABEL_W, flexShrink: 0, borderRight: "1px solid rgba(0,0,0,0.07)" }}
             className="px-4 py-2">
@@ -93,7 +92,7 @@ export default function TimelineView({ tasks, onTaskClick }: Props) {
           </div>
         </div>
 
-        {/* ── Groups ── */}
+        {/* Groups */}
         {statusGroups.map(group => {
           const sm = STATUS_META[group.status] || { dot: "rgba(0,0,0,0.3)" };
           return (

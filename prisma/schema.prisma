@@ -10,9 +10,7 @@ datasource db {
   provider = "postgresql"
 }
 
-// ─────────────────────────────────────────────────────────
-// BETTER AUTH CORE TABLES
-// ─────────────────────────────────────────────────────────
+// Better Auth Core Tables
 
 model User {
   id            String   @id @default(cuid())
@@ -122,9 +120,7 @@ model Verification {
   @@map("verification")
 }
 
-// ─────────────────────────────────────────────────────────
-// BETTER AUTH ORGANIZATION PLUGIN TABLES (Tenant = Org)
-// ─────────────────────────────────────────────────────────
+// Better Auth Organization Plugin Tables (Tenant = Org)
 
 model Organization {
   id          String   @id @default(cuid())
@@ -219,9 +215,7 @@ model TenantInviteLink {
   @@map("tenant_invite_link")
 }
 
-// ─────────────────────────────────────────────────────────
-// OPERO CUSTOM TABLES (all scoped to tenant via organizationId)
-// ─────────────────────────────────────────────────────────
+// Opero Custom Tables (scoped to tenant)
 
 /// Tenant-level configuration (1:1 with Organization)
 model TenantSettings {
@@ -287,9 +281,7 @@ model TenantActivity {
   @@map("tenant_activity")
 }
 
-// ─────────────────────────────────────────────────────────
-// NEW FEATURE MODELS (TENANT AWARE)
-// ─────────────────────────────────────────────────────────
+// New Feature Models (Tenant Aware)
 
 /// Lightweight tenant-scoped online presence heartbeat
 model UserPresence {

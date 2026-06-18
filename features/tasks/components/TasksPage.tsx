@@ -118,17 +118,14 @@ export default function TasksPage() {
   }
 
   async function createTask(task: Task) {
-    // Add optimistically first
     const optimisticTask = { ...task, id: task.id || `T-${Date.now()}` };
     setTasks(prev => [...prev, optimisticTask]);
     
     try {
       const saved = await createTaskRecord<Task>(task);
-      // Replace optimistic with saved
       setTasks(prev => prev.map(t => t.id === optimisticTask.id ? saved : t));
     } catch (err) {
       console.error("Failed to create task", err);
-      // Revert if failed
       setTasks(prev => prev.filter(t => t.id !== optimisticTask.id));
     }
   }

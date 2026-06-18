@@ -25,7 +25,6 @@ export default function CalendarView({ tasks, onTaskClick }: Props) {
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    // Build calendar grid
     const cells: (Date | null)[] = [];
     for (let i = 0; i < firstDay; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
@@ -34,7 +33,6 @@ export default function CalendarView({ tasks, onTaskClick }: Props) {
     const weeks: (Date | null)[][] = [];
     for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
 
-    // Index tasks by due date
     const byDate: Record<string, Task[]> = {};
     tasks.forEach(t => {
       if (!t.due) return;

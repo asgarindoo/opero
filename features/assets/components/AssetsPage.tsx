@@ -21,7 +21,6 @@ function AssetsPageContent() {
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Removed icons for a cleaner, unified high-density look
   const tabs = [
     { id: "all", label: "All Assets" },
     { id: "available", label: "Available" },
@@ -60,7 +59,7 @@ function AssetsPageContent() {
         tabs={tabs}
         activeTab={filterMode}
         onTabChange={(id) => setFilterMode(id as FilterMode)}
-        background="bg-[#faf5f5]" // Updated to match platform-wide secondary surface
+        background="bg-[#faf5f5]"
       />
 
       <div className="flex-1 overflow-hidden bg-background">

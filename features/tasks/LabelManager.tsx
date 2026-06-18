@@ -15,7 +15,6 @@ export default function LabelManager({ selected, onChange }: Props) {
   const [newLabel,  setNewLabel]  = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus create input
   useEffect(() => {
     if (creating) inputRef.current?.focus();
   }, [creating]);
@@ -31,7 +30,6 @@ export default function LabelManager({ selected, onChange }: Props) {
     if (!trimmed) { setCreating(false); setNewLabel(""); return; }
     const next = addCustomLabel(trimmed);
     setAllLabels(next);
-    // Auto-select the new label
     if (!selected.includes(trimmed)) onChange([...selected, trimmed]);
     setNewLabel("");
     setCreating(false);
