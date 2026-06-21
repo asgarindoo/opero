@@ -53,9 +53,12 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 hari
     updateAge: 60 * 60 * 24,
-    // Disable cookie cache biar tidak kena ERR_RESPONSE_HEADERS_TOO_BIG
+    // Cookie cache: simpan session terenkripsi di cookie agar tidak perlu DB
+    // untuk setiap request. maxAge pendek (5 menit) menjaga ukuran cookie kecil
+    // dan session tetap fresh. Jika header terlalu besar, set ke false.
     cookieCache: {
-      enabled: false,
+      enabled: true,
+      maxAge: 60 * 5, // 5 menit
     },
   },
 

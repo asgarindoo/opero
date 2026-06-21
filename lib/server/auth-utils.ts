@@ -103,12 +103,22 @@ export const getCurrentTenant = cache(async function getCurrentTenant(): Promise
   const session = await getSession();
   if (!session?.session?.activeOrganizationId) return null;
 
-  const org = await prisma.organization.findUnique({
-    where: { id: session.session.activeOrganizationId },
-    select: { id: true, name: true, slug: true, logo: true, status: true },
+  // Satu query: ambil org + validasi membership sekaligus
+  const membership = await prisma.member.findUnique({
+    where: {
+      organizationId_userId: {
+        organizationId: session.session.activeOrganizationId,
+        userId: session.user.id,
+      },
+    },
+    select: {
+      status: true,
+      organization: { select: { id: true, name: true, slug: true, logo: true, status: true } },
+    },
   });
 
-  return org ?? null;
+  if (!membership?.organization || membership.status !== "active") return null;
+  return membership.organization;
 });
 
 export async function requireAuth(): Promise<CurrentUser> {
@@ -122,44 +132,47 @@ export async function requireAuth(): Promise<CurrentUser> {
   return user;
 }
 
-// Cek role + membership tenant
+// Cek role + membership tenant — 1 query dengan include organization
 export async function requireTenantAccess(
   slug: string
 ): Promise<TenantMembership> {
   const user = await requireAuth();
 
-  const org = await prisma.organization.findUnique({
-    where: { slug },
-    select: { id: true, name: true, slug: true, logo: true, status: true },
+  // Satu query: ambil membership + org sekaligus
+  const membership = await prisma.member.findFirst({
+    where: {
+      userId: user.id,
+      organization: { slug },
+    },
+    select: {
+      role: true,
+      status: true,
+      organization: { select: { id: true, name: true, slug: true, logo: true, status: true } },
+    },
   });
 
-  if (!org) {
+  if (!membership?.organization) {
     throw new Response(JSON.stringify({ error: "Tenant not found" }), {
       status: 404,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  if (org.status !== "active") {
+  if (membership.organization.status !== "active") {
     throw new Response(JSON.stringify({ error: "Tenant inactive" }), {
       status: 423,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  const membership = await prisma.member.findUnique({
-    where: { organizationId_userId: { organizationId: org.id, userId: user.id } },
-    select: { role: true, status: true },
-  });
-
-  if (!membership || membership.status !== "active") {
+  if (membership.status !== "active") {
     throw new Response(JSON.stringify({ error: "Access denied" }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  return { tenant: org, user, role: membership.role as OrgRole };
+  return { tenant: membership.organization, user, role: membership.role as OrgRole };
 }
 
 export async function requireRole(
@@ -203,32 +216,33 @@ export const resolveTenantContext = cache(async function resolveTenantContext():
   const headerTenantSlug = hdrs.get("x-tenant-slug");
 
   if (headerTenantSlug) {
-    const tenant = await prisma.organization.findUnique({
-      where: { slug: headerTenantSlug },
-      select: { id: true, name: true, slug: true, logo: true, status: true },
+    // Satu query: membership + org sekaligus, tanpa 2 round-trip terpisah
+    const membership = await prisma.member.findFirst({
+      where: {
+        userId: session.user.id,
+        organization: { slug: headerTenantSlug },
+      },
+      select: {
+        role: true,
+        status: true,
+        organization: { select: { id: true, name: true, slug: true, logo: true, status: true } },
+      },
     });
 
-    if (!tenant) {
+    if (!membership?.organization) {
       return failedTenantContext(404, "Tenant not found", headerTenantSlug);
     }
 
-    if (tenant.status !== "active") {
+    if (membership.organization.status !== "active") {
       return failedTenantContext(423, "Tenant inactive", headerTenantSlug);
     }
 
-    const membership = await prisma.member.findUnique({
-      where: {
-        organizationId_userId: { organizationId: tenant.id, userId: session.user.id },
-      },
-      select: { role: true, status: true },
-    });
-
-    if (!membership || membership.status !== "active") {
+    if (membership.status !== "active") {
       return failedTenantContext(403, "Access denied", headerTenantSlug);
     }
 
     return {
-      context: createTenantContext(session, tenant, membership.role),
+      context: createTenantContext(session, membership.organization, membership.role),
       failure: null,
     };
   }

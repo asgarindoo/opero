@@ -397,6 +397,11 @@ export default async function proxy(request: NextRequest) {
   }
 
   if (AUTH_ROUTES.has(pathname)) {
+    // Optimasi: jika tidak ada session cookie, user pasti belum login
+    // Langsung render halaman login tanpa query DB
+    if (!hasSessionTokenCookie(request)) {
+      return passThrough(request);
+    }
     const session = await getSession(request);
     if (session?.user?.id) {
       const callbackUrl = request.nextUrl.searchParams.get("callbackUrl");
@@ -413,6 +418,12 @@ export default async function proxy(request: NextRequest) {
   }
 
   if (isTenantRoute(pathname)) {
+    // Optimasi: jika tidak ada session cookie, user pasti belum login
+    // Langsung redirect ke login tanpa query DB
+    if (!hasSessionTokenCookie(request)) {
+      return redirect(request, buildLoginRedirect(request));
+    }
+
     const session = await getSession(request);
     if (!session?.user?.id) {
       return redirect(request, buildLoginRedirect(request));
