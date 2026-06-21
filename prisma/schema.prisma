@@ -86,8 +86,12 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Index untuk Better Auth session lookup by userId (tanpa ini: full-scan)
+  @@index([userId])
+  @@index([userId, expiresAt])
   @@map("session")
 }
+
 
 model Account {
   id                    String    @id @default(cuid())
@@ -180,8 +184,14 @@ model Member {
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, userId])
+  // Index untuk lookup by userId (dipakai di auth-utils, tasks, dll)
+  @@index([userId])
+  @@index([userId, status])
+  // Index untuk listAllMembers per org
+  @@index([organizationId, status])
   @@map("member")
 }
+
 
 model Invitation {
   id             String   @id @default(cuid())

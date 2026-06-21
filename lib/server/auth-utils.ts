@@ -219,12 +219,21 @@ export async function requireRole(
   return context;
 }
 
-// Ambil tenant dari header x-tenant-slug yang diset proxy
+// Ambil tenant dari header x-tenant-slug yang diset proxy.
+// Prioritas: gunakan data dari resolveTenantContext (sudah cached) terlebih dahulu
+// untuk menghindari DB query duplikat.
 export const resolveTenantFromRequest = cache(async function resolveTenantFromRequest(): Promise<CurrentTenant | null> {
   const hdrs = await headers();
   const slugFromHeader = hdrs.get("x-tenant-slug");
 
   if (slugFromHeader) {
+    // Coba pakai hasil cached dari resolveTenantContext dulu
+    const { context } = await resolveTenantContext();
+    if (context?.tenant.slug === slugFromHeader) {
+      return context.tenant;
+    }
+
+    // Fallback ke DB jika slug tidak match (jarang terjadi)
     const org = await prisma.organization.findUnique({
       where: { slug: slugFromHeader },
       select: { id: true, name: true, slug: true, logo: true, status: true },
@@ -235,6 +244,7 @@ export const resolveTenantFromRequest = cache(async function resolveTenantFromRe
   // Fallback: use active org from session
   return getCurrentTenant();
 });
+
 
 // Validasi session + tenant + membership sekaligus
 export const resolveTenantContext = cache(async function resolveTenantContext(): Promise<TenantContextResolution> {

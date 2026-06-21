@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 import type { TenantContext } from "@/lib/server/auth-utils";
 import { requirePermission } from "@/lib/server/rbac";
 import { tenantRls } from "@/lib/server/tenant-rls";
@@ -11,27 +12,41 @@ import { dateValue, firstStringFromArray, jsonArray, jsonInputOrDefault, textVal
 const MODULE = "TASKS";
 const ENTITY = "Task";
 
+// Cache member identity map per tenant, TTL 30s
+// Mengeliminasi DB query untuk identity resolution di setiap list/get
+const _getMemberIdentityMapCached = unstable_cache(
+  async (tenantId: string) => {
+    const members = await prisma.member.findMany({
+      where: { organizationId: tenantId, status: "active" },
+      select: {
+        userId: true,
+        user: { select: { id: true, name: true, email: true, image: true } },
+      },
+    });
+    return members.map((member) => ({
+      userId: member.userId,
+      user: member.user,
+    }));
+  },
+  ["member-identity-map"],
+  { revalidate: 30 }
+);
+
 async function getMemberIdentityMap(ctx: TenantContext) {
-  const members = await prisma.member.findMany({
-    where: { organizationId: ctx.tenantId, status: "active" },
-    include: {
-      user: { select: { id: true, name: true, email: true, image: true } },
-    },
-  });
-
+  const members = await _getMemberIdentityMapCached(ctx.tenantId);
   return new Map(
-    members.map((member) => {
-      const user = {
-        id: member.userId,
-        name: getUserDisplayName(member.user, "Member"),
-        email: member.user.email,
-        image: normalizeUserAvatarImage(member.userId, member.user.image),
-      };
-
-      return [member.userId, user];
-    })
+    members.map(({ userId, user }) => [
+      userId,
+      {
+        id: userId,
+        name: getUserDisplayName(user, "Member"),
+        email: user.email,
+        image: normalizeUserAvatarImage(userId, user.image),
+      },
+    ])
   );
 }
+
 
 function resolveTaskMember(snapshot: UserIdentity, identities: Map<string, UserIdentity>) {
   const userId = snapshot.id ?? snapshot.userId ?? "";
