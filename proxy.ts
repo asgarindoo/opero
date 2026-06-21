@@ -174,14 +174,13 @@ function sessionDataCookieSortKey(name: string) {
 
 function sanitizeHeaders(headers: Headers): Headers {
   const sanitized = new Headers(headers);
+  // Hapus custom headers yang bisa di-spoof client
+  // JANGAN strip cookie — session_data diperlukan Better Auth cookieCache.
+  // Cleanup cookie lama tetap ditangani di response oleh cleanupSessionDataCookies.
   sanitized.delete("x-tenant-id");
   sanitized.delete("x-tenant-slug");
   sanitized.delete("x-user-id");
   sanitized.delete("x-user-role");
-
-  const cookieHeader = stripSessionDataCookies(sanitized.get("cookie"));
-  if (cookieHeader) sanitized.set("cookie", cookieHeader);
-  else sanitized.delete("cookie");
 
   return sanitized;
 }
