@@ -146,13 +146,17 @@ async function buildTaskCreateData(db: TaskLookupClient, ctx: TenantContext, dat
   };
 }
 
-export async function listTasks() {
+export async function listTasks(params?: { limit?: number; offset?: number }) {
   const ctx = await requirePermission("tasks.read");
+  const limit = params?.limit && params.limit > 0 ? Math.min(params.limit, 10000) : undefined;
+  const offset = params?.offset && params.offset > 0 ? params.offset : undefined;
   const tasks = await tenantRls(ctx, (tx) =>
     tx.task.findMany({
       where: { organizationId: ctx.tenantId },
       orderBy: { createdAt: "desc" },
       include: { createdBy: { select: { id: true, name: true, email: true, image: true } } },
+      ...(limit !== undefined ? { take: limit } : {}),
+      ...(offset !== undefined ? { skip: offset } : {}),
     })
   );
   return mapTaskRecords(ctx, tasks);

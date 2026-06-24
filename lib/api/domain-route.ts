@@ -6,8 +6,10 @@ const PayloadSchema = z.object({
   data: z.record(z.string(), z.unknown()),
 });
 
+type QueryParams = { limit?: number; offset?: number };
+
 type DomainService = {
-  list: () => Promise<unknown[]>;
+  list: (params?: QueryParams) => Promise<unknown[]>;
   get?: (id: string) => Promise<unknown | null>;
   create: (data: Record<string, unknown>) => Promise<unknown>;
   update: (id: string, data: Record<string, unknown>) => Promise<unknown | null>;
@@ -18,8 +20,20 @@ export function createDomainCollectionHandlers(service: Pick<DomainService, "lis
   return {
     async GET(req: NextRequest) {
       try {
-        const items = await service.list();
-        return NextResponse.json({ items });
+        const { searchParams } = req.nextUrl;
+        const rawLimit = searchParams.get("limit");
+        const rawOffset = searchParams.get("offset");
+        const params: QueryParams = {};
+        if (rawLimit) {
+          const limit = parseInt(rawLimit, 10);
+          if (!isNaN(limit) && limit > 0) params.limit = limit;
+        }
+        if (rawOffset) {
+          const offset = parseInt(rawOffset, 10);
+          if (!isNaN(offset) && offset >= 0) params.offset = offset;
+        }
+        const items = await service.list(Object.keys(params).length > 0 ? params : undefined);
+        return NextResponse.json({ items, total: items.length });
       } catch (err) {
         if (err instanceof Response) return err;
         unstable_rethrow(err);
