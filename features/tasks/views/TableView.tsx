@@ -66,7 +66,6 @@ export default function TableView({ tasks, onTaskClick, onStatusChange }: Props)
         <table className="w-full border-collapse" style={{ minWidth: 700 }}>
           <thead className="sticky top-0 z-10 bg-[#fef8f8]">
             <tr style={{ background: "rgba(0,0,0,0.025)", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-              <SortHeader label="ID"       sortKey="id"       active={sortKey} dir={sortDir} onSort={handleSort} />
               <SortHeader label="Title"    sortKey="title"    active={sortKey} dir={sortDir} onSort={handleSort} />
               <SortHeader label="Status"   sortKey="status"   active={sortKey} dir={sortDir} onSort={handleSort} />
               <SortHeader label="Priority" sortKey="priority" active={sortKey} dir={sortDir} onSort={handleSort} />
@@ -87,9 +86,6 @@ export default function TableView({ tasks, onTaskClick, onStatusChange }: Props)
                   className="cursor-pointer hover:bg-black/[0.02] transition-colors border-b"
                   style={{ borderColor: "rgba(0,0,0,0.04)", background: i % 2 === 0 ? "transparent" : "rgba(0,0,0,0.008)" }}
                 >
-                  <td className="px-3 py-2.5">
-                    <span className="font-label-caps text-[9px] font-semibold" style={{ color: "var(--color-on-surface-variant)", opacity: 0.4 }}>{task.id}</span>
-                  </td>
                   <td className="px-3 py-2.5 max-w-[300px]">
                     <span className="font-body-md text-[12.5px] font-medium line-clamp-1" style={{ color: "var(--color-on-surface)", opacity: 0.9 }}>{task.title}</span>
                   </td>

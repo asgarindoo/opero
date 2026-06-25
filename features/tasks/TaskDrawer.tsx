@@ -152,7 +152,7 @@ export default function TaskDrawer({ task, allTasks, onClose, onUpdate, onDelete
     <Drawer
       isOpen={true}
       onClose={onClose}
-      title={task.id}
+      title="Task Details"
       size="md"
     >
       <div className="space-y-8">

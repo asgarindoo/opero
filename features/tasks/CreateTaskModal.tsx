@@ -141,7 +141,7 @@ export default function CreateTaskModal({ onClose, onCreate, nextId, defaultStat
 
   return (
     <ModalShell onClose={onClose} maxWidth={600}>
-      <ModalHeader title="New Task" subtitle={nextId} onClose={onClose} />
+      <ModalHeader title="New Task" onClose={onClose} />
       
       <ModalContent className="db-sidebar space-y-6">
         <div className="space-y-4">

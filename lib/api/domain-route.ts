@@ -56,7 +56,7 @@ export function createDomainCollectionHandlers(service: Pick<DomainService, "lis
 
         const item = await service.create(parsed.data.data);
         return NextResponse.json({ item }, { status: 201 });
-      } catch (err) {
+      } catch (err: any) {
         if (err instanceof Response) return err;
         unstable_rethrow(err);
         console.error(`[POST ${req.nextUrl.pathname}]`, err);

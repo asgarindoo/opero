@@ -163,7 +163,6 @@ async function syncFinanceTransaction(ctx: any, invoiceId: string, invoiceStatus
 
       await prisma.transaction.create({
         data: {
-          id: "tx_" + crypto.randomUUID(),
           organizationId: ctx.tenantId,
           title: txPayload.title,
           type: "Income",
@@ -214,9 +213,7 @@ export async function createInvoice(data: Record<string, unknown>) {
   const invoiceData = await buildInvoiceCreateData(ctx.tenantId, data);
   const invoiceStatus = invoiceData.status;
   const invoice = await prisma.invoice.create({
-    data: {
-      id: typeof data.id === "string" && data.id ? data.id : crypto.randomUUID(),
-      organizationId: ctx.tenantId,
+    data: {      organizationId: ctx.tenantId,
       ...invoiceData,
       createdById: ctx.userId,
       updatedById: ctx.userId,

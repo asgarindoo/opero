@@ -74,9 +74,7 @@ export async function createGoal(data: Record<string, unknown>) {
   }
 
   const goal = await prisma.goal.create({
-    data: {
-      id: typeof data.id === "string" && data.id ? data.id : crypto.randomUUID(),
-      organizationId: ctx.tenantId,
+    data: {      organizationId: ctx.tenantId,
       title,
       targetOutcome,
       description: textValue(data.description),

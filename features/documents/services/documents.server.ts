@@ -64,9 +64,7 @@ export async function createDocument(data: Record<string, unknown>) {
   const ctx = await requirePermission("documents.create");
   const documentData = await buildDocumentCreateData(ctx.tenantId, ctx.userId, data);
   const document = await prisma.document.create({
-    data: {
-      id: typeof data.id === "string" && data.id ? data.id : crypto.randomUUID(),
-      organizationId: ctx.tenantId,
+    data: {      organizationId: ctx.tenantId,
       ...documentData,
       createdById: ctx.userId,
       updatedById: ctx.userId,
@@ -141,9 +139,7 @@ export async function createFolder(data: Record<string, unknown>) {
   const title = getTitle(data);
   const parentId = await resolveParentFolderId(ctx.tenantId, data.parentId);
   const folder = await prisma.folder.create({
-    data: {
-      id: typeof data.id === "string" && data.id ? data.id : crypto.randomUUID(),
-      organizationId: ctx.tenantId,
+    data: {      organizationId: ctx.tenantId,
       title,
       name: textValue(data.name) ?? title,
       description: textValue(data.description),

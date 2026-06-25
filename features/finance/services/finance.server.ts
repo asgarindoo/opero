@@ -41,9 +41,7 @@ export async function createTransaction(data: Record<string, unknown>) {
   const ctx = await requirePermission("finance.create");
   const transactionData = buildTransactionCreateData(data);
   const transaction = await prisma.transaction.create({
-    data: {
-      id: typeof data.id === "string" && data.id ? data.id : crypto.randomUUID(),
-      organizationId: ctx.tenantId,
+    data: {      organizationId: ctx.tenantId,
       ...transactionData,
       createdById: ctx.userId,
       updatedById: ctx.userId,

@@ -75,13 +75,6 @@ function TaskRow({ task, onClick }: { task: Task; onClick: () => void }) {
         </span>
       )}
 
-      {/* ID */}
-      <span
-        className="font-label-caps text-[8px] font-semibold shrink-0"
-        style={{ color: "var(--color-on-surface-variant)", opacity: 0.3 }}
-      >
-        {task.id}
-      </span>
     </div>
   );
 }

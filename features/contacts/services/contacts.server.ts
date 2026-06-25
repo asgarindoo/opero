@@ -86,9 +86,7 @@ export async function createContact(data: Record<string, unknown>) {
   const parsed = contactSchema.parse(data);
   const title = getTitle(parsed);
   const contact = await prisma.contact.create({
-    data: {
-      id: typeof parsed.id === "string" && parsed.id ? parsed.id : crypto.randomUUID(),
-      organizationId: ctx.tenantId,
+    data: {      organizationId: ctx.tenantId,
       title,
       name: textValue(parsed.name) ?? title,
       relationshipType: textValue(parsed.relationshipType),

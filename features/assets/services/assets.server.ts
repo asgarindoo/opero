@@ -53,9 +53,7 @@ export async function createAsset(data: Record<string, unknown>) {
   const ctx = await requirePermission("assets.create");
   const assetData = buildAssetCreateData(data);
   const asset = await prisma.asset.create({
-    data: {
-      id: typeof data.id === "string" && data.id ? data.id : crypto.randomUUID(),
-      organizationId: ctx.tenantId,
+    data: {      organizationId: ctx.tenantId,
       ...assetData,
       createdById: ctx.userId,
       updatedById: ctx.userId,

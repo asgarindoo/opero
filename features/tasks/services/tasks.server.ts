@@ -193,7 +193,6 @@ export async function createTask(data: Record<string, unknown>) {
     const taskData = await buildTaskCreateData(tx, ctx, data);
     return tx.task.create({
       data: {
-        id: typeof data.id === "string" && data.id ? data.id : crypto.randomUUID(),
         organizationId: ctx.tenantId,
         ...taskData,
         createdById: ctx.userId,

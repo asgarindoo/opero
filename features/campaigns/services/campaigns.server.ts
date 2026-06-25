@@ -41,9 +41,7 @@ export async function createCampaign(data: Record<string, unknown>) {
   const ctx = await requirePermission("campaigns.create");
   const campaignData = buildCampaignCreateData(data);
   const campaign = await prisma.campaign.create({
-    data: {
-      id: typeof data.id === "string" && data.id ? data.id : crypto.randomUUID(),
-      organizationId: ctx.tenantId,
+    data: {      organizationId: ctx.tenantId,
       ...campaignData,
       createdById: ctx.userId,
       updatedById: ctx.userId,

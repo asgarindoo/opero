@@ -111,8 +111,7 @@ export default function TimelineView({ tasks, onTaskClick }: Props) {
                   <div key={task.id} className="flex items-center border-b" style={{ borderColor: "rgba(0,0,0,0.04)", height: ROW_H }}>
                     {/* Label */}
                     <div className="flex items-center gap-2 px-4 shrink-0" style={{ width: LABEL_W, borderRight: "1px solid rgba(0,0,0,0.05)" }}>
-                      <span className="font-label-caps text-[8px] font-semibold shrink-0" style={{ color: "var(--color-on-surface-variant)", opacity: 0.38 }}>{task.id}</span>
-                      <span className="font-body-md text-[11.5px] truncate" style={{ color: "var(--color-on-surface)", opacity: 0.85 }}>{task.title}</span>
+                      <span className="font-body-sm text-[12.5px] font-medium leading-none truncate" style={{ color: "var(--color-on-surface)", opacity: 0.9 }}>{task.title}</span>
                     </div>
 
                     {/* Bar track */}

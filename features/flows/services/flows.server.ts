@@ -93,9 +93,7 @@ export async function createFlow(data: Record<string, unknown>) {
   }
 
   const flow = await prisma.flow.create({
-    data: {
-      id: typeof data.id === "string" && data.id ? data.id : crypto.randomUUID(),
-      organizationId: ctx.tenantId,
+    data: {      organizationId: ctx.tenantId,
       title,
       status: getStatus(data, "Active"),
       ...flowColumns(data),

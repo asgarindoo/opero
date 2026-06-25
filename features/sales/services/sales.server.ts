@@ -51,9 +51,7 @@ export async function createSale(data: Record<string, unknown>) {
   const ctx = await requirePermission("sales.create");
   const saleData = buildSaleCreateData(data);
   const sale = await prisma.sale.create({
-    data: {
-      id: typeof data.id === "string" && data.id ? data.id : crypto.randomUUID(),
-      organizationId: ctx.tenantId,
+    data: {      organizationId: ctx.tenantId,
       ...saleData,
       createdById: ctx.userId,
       updatedById: ctx.userId,
