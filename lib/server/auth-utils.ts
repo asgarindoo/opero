@@ -1,4 +1,3 @@
-
 import { headers } from "next/headers";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
@@ -6,7 +5,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizeUserAvatarImage } from "@/lib/server/supabase-storage";
 import { getUserDisplayName } from "@/lib/user-identity";
-
 
 export type OrgRole = "owner" | "admin" | "member";
 
@@ -48,7 +46,6 @@ export interface TenantContextResolution {
   failure: TenantContextFailure | null;
 }
 
-// Cache per request biar tidak double query
 export const getSession = cache(async function getSession() {
   try {
     const hdrs = await headers();
@@ -100,55 +97,61 @@ function failedTenantContext(
   };
 }
 
-// ─── Cached DB queries ───────────────────────────────────────────────────────
-// unstable_cache menyimpan hasil cross-request (shared across Vercel functions).
-// TTL 30 detik — acceptable staleness untuk membership/org check.
-
-const _getMemberBySlug = unstable_cache(
+// Cached cross-request (30s TTL) for membership/org checks
+const _getOrgWithMemberBySlug = unstable_cache(
   async (userId: string, slug: string) =>
-    prisma.member.findFirst({
-      where: { userId, organization: { slug } },
+    prisma.organization.findUnique({
+      where: { slug },
       select: {
-        role: true,
+        id: true,
+        name: true,
+        slug: true,
+        logo: true,
         status: true,
-        organization: { select: { id: true, name: true, slug: true, logo: true, status: true } },
+        members: {
+          where: { userId },
+          select: { role: true, status: true },
+        },
       },
     }),
-  ["member-by-slug"],
+  ["org-with-member-by-slug"],
   { revalidate: 30 }
 );
 
-const _getMemberByOrgId = unstable_cache(
+const _getOrgWithMemberById = unstable_cache(
   async (userId: string, organizationId: string) =>
-    prisma.member.findUnique({
-      where: { organizationId_userId: { organizationId, userId } },
+    prisma.organization.findUnique({
+      where: { id: organizationId },
       select: {
-        role: true,
+        id: true,
+        name: true,
+        slug: true,
+        logo: true,
         status: true,
-        organization: { select: { id: true, name: true, slug: true, logo: true, status: true } },
+        members: {
+          where: { userId },
+          select: { role: true, status: true },
+        },
       },
     }),
-  ["member-by-org-id"],
+  ["org-with-member-by-id"],
   { revalidate: 30 }
 );
-
-// ─────────────────────────────────────────────────────────────────────────────
-
 
 export const getCurrentTenant = cache(async function getCurrentTenant(): Promise<CurrentTenant | null> {
   const session = await getSession();
   if (!session?.session?.activeOrganizationId) return null;
 
-  // Cached: org + membership dalam 1 query, disimpan 30 detik cross-request
-  const membership = await _getMemberByOrgId(
+  const org = await _getOrgWithMemberById(
     session.user.id,
     session.session.activeOrganizationId
   );
 
-  if (!membership?.organization || membership.status !== "active") return null;
-  return membership.organization;
-});
+  const membership = org?.members?.[0];
+  if (!org || org.status !== "active" || !membership || membership.status !== "active") return null;
 
+  return { id: org.id, name: org.name, slug: org.slug, logo: org.logo, status: org.status };
+});
 
 export async function requireAuth(): Promise<CurrentUser> {
   const user = await getCurrentUser();
@@ -161,47 +164,46 @@ export async function requireAuth(): Promise<CurrentUser> {
   return user;
 }
 
-// Cek role + membership tenant — 1 query dengan include organization
 export async function requireTenantAccess(
   slug: string
 ): Promise<TenantMembership> {
   const user = await requireAuth();
 
-  // Satu query: ambil membership + org sekaligus
-  const membership = await prisma.member.findFirst({
-    where: {
-      userId: user.id,
-      organization: { slug },
-    },
+  const org = await prisma.organization.findUnique({
+    where: { slug },
     select: {
-      role: true,
-      status: true,
-      organization: { select: { id: true, name: true, slug: true, logo: true, status: true } },
+      id: true, name: true, slug: true, logo: true, status: true,
+      members: {
+        where: { userId: user.id },
+        select: { role: true, status: true }
+      }
     },
   });
 
-  if (!membership?.organization) {
+  if (!org) {
     throw new Response(JSON.stringify({ error: "Tenant not found" }), {
       status: 404,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  if (membership.organization.status !== "active") {
+  if (org.status !== "active") {
     throw new Response(JSON.stringify({ error: "Tenant inactive" }), {
       status: 423,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  if (membership.status !== "active") {
+  const membership = org.members[0];
+  if (!membership || membership.status !== "active") {
     throw new Response(JSON.stringify({ error: "Access denied" }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  return { tenant: membership.organization, user, role: membership.role as OrgRole };
+  const tenant = { id: org.id, name: org.name, slug: org.slug, logo: org.logo, status: org.status };
+  return { tenant, user, role: membership.role as OrgRole };
 }
 
 export async function requireRole(
@@ -219,21 +221,17 @@ export async function requireRole(
   return context;
 }
 
-// Ambil tenant dari header x-tenant-slug yang diset proxy.
-// Prioritas: gunakan data dari resolveTenantContext (sudah cached) terlebih dahulu
-// untuk menghindari DB query duplikat.
+// Resolve tenant from proxy header
 export const resolveTenantFromRequest = cache(async function resolveTenantFromRequest(): Promise<CurrentTenant | null> {
   const hdrs = await headers();
   const slugFromHeader = hdrs.get("x-tenant-slug");
 
   if (slugFromHeader) {
-    // Coba pakai hasil cached dari resolveTenantContext dulu
     const { context } = await resolveTenantContext();
     if (context?.tenant.slug === slugFromHeader) {
       return context.tenant;
     }
 
-    // Fallback ke DB jika slug tidak match (jarang terjadi)
     const org = await prisma.organization.findUnique({
       where: { slug: slugFromHeader },
       select: { id: true, name: true, slug: true, logo: true, status: true },
@@ -241,12 +239,9 @@ export const resolveTenantFromRequest = cache(async function resolveTenantFromRe
     return org ?? null;
   }
 
-  // Fallback: use active org from session
   return getCurrentTenant();
 });
 
-
-// Validasi session + tenant + membership sekaligus
 export const resolveTenantContext = cache(async function resolveTenantContext(): Promise<TenantContextResolution> {
   const session = await getSession();
   if (!session?.user) return failedTenantContext(401, "Unauthorized");
@@ -255,23 +250,24 @@ export const resolveTenantContext = cache(async function resolveTenantContext():
   const headerTenantSlug = hdrs.get("x-tenant-slug");
 
   if (headerTenantSlug) {
-    // Cached: membership + org dalam 1 query, TTL 30 detik
-    const membership = await _getMemberBySlug(session.user.id, headerTenantSlug);
+    const org = await _getOrgWithMemberBySlug(session.user.id, headerTenantSlug);
 
-    if (!membership?.organization) {
+    if (!org) {
       return failedTenantContext(404, "Tenant not found", headerTenantSlug);
     }
 
-    if (membership.organization.status !== "active") {
+    if (org.status !== "active") {
       return failedTenantContext(423, "Tenant inactive", headerTenantSlug);
     }
 
-    if (membership.status !== "active") {
+    const membership = org.members[0];
+    if (!membership || membership.status !== "active") {
       return failedTenantContext(403, "Access denied", headerTenantSlug);
     }
 
+    const tenant = { id: org.id, name: org.name, slug: org.slug, logo: org.logo, status: org.status };
     return {
-      context: createTenantContext(session, membership.organization, membership.role),
+      context: createTenantContext(session, tenant, membership.role),
       failure: null,
     };
   }
@@ -280,30 +276,30 @@ export const resolveTenantContext = cache(async function resolveTenantContext():
     return failedTenantContext(401, "Unauthorized");
   }
 
-  // Cached: membership + org via orgId, TTL 30 detik
-  const membership = await _getMemberByOrgId(
+  const org = await _getOrgWithMemberById(
     session.user.id,
     session.session.activeOrganizationId
   );
 
-  if (!membership?.organization) {
-    return failedTenantContext(403, "Access denied");
+  if (!org) {
+    return failedTenantContext(404, "Tenant not found");
   }
 
-  if (membership.organization.status !== "active") {
-    return failedTenantContext(423, "Tenant inactive", membership.organization.slug);
+  if (org.status !== "active") {
+    return failedTenantContext(423, "Tenant inactive", org.slug);
   }
 
-  if (membership.status !== "active") {
-    return failedTenantContext(403, "Access denied", membership.organization.slug);
+  const membership = org.members[0];
+  if (!membership || membership.status !== "active") {
+    return failedTenantContext(403, "Access denied", org.slug);
   }
 
+  const tenant = { id: org.id, name: org.name, slug: org.slug, logo: org.logo, status: org.status };
   return {
-    context: createTenantContext(session, membership.organization, membership.role),
+    context: createTenantContext(session, tenant, membership.role),
     failure: null,
   };
 });
-
 
 export const getTenantContext = cache(async function getTenantContext(): Promise<TenantContext | null> {
   const result = await resolveTenantContext();
