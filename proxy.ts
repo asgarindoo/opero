@@ -174,9 +174,6 @@ function sessionDataCookieSortKey(name: string) {
 
 function sanitizeHeaders(headers: Headers): Headers {
   const sanitized = new Headers(headers);
-  // Hapus custom headers yang bisa di-spoof client
-  // JANGAN strip cookie — session_data diperlukan Better Auth cookieCache.
-  // Cleanup cookie lama tetap ditangani di response oleh cleanupSessionDataCookies.
   sanitized.delete("x-tenant-id");
   sanitized.delete("x-tenant-slug");
   sanitized.delete("x-user-id");
@@ -396,8 +393,6 @@ export default async function proxy(request: NextRequest) {
   }
 
   if (AUTH_ROUTES.has(pathname)) {
-    // Optimasi: jika tidak ada session cookie, user pasti belum login
-    // Langsung render halaman login tanpa query DB
     if (!hasSessionTokenCookie(request)) {
       return passThrough(request);
     }
@@ -417,12 +412,6 @@ export default async function proxy(request: NextRequest) {
   }
 
   if (isTenantRoute(pathname)) {
-    // Optimasi: jika tidak ada session cookie, user pasti belum login
-    // Langsung redirect ke login tanpa query DB
-    if (!hasSessionTokenCookie(request)) {
-      return redirect(request, buildLoginRedirect(request));
-    }
-
     const session = await getSession(request);
     if (!session?.user?.id) {
       return redirect(request, buildLoginRedirect(request));
