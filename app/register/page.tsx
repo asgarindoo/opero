@@ -269,20 +269,6 @@ export default function RegisterPage() {
               Sign in
             </Link>
           </p>
-
-          {/* Trust badges */}
-          <div className="mt-10 pt-6 border-t border-outline/10 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            {[
-              { icon: "shield", label: "SOC 2 Type II" },
-              { icon: "lock", label: "256-bit SSL" },
-              { icon: "privacy_tip", label: "GDPR Ready" },
-            ].map((b) => (
-              <div key={b.label} className="flex items-center gap-1.5 text-on-surface-variant/40">
-                <span className="material-symbols-outlined text-[14px]">{b.icon}</span>
-                <span className="font-label-caps text-[10px] uppercase tracking-[0.05em] font-semibold">{b.label}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </main>
 

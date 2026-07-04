@@ -369,19 +369,7 @@ export default function LoginPage() {
             </Link>
           </p>
 
-          {/* Trust badges */}
-          <div className="mt-10 pt-6 border-t border-outline/10 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            {[
-              { icon: "shield", label: "SOC 2 Type II" },
-              { icon: "lock", label: "256-bit SSL" },
-              { icon: "privacy_tip", label: "GDPR Ready" },
-            ].map((badge) => (
-              <div key={badge.label} className="flex items-center gap-1.5 text-on-surface-variant/40">
-                <span className="material-symbols-outlined text-[14px]">{badge.icon}</span>
-                <span className="font-label-caps text-[10px] uppercase tracking-[0.05em] font-semibold">{badge.label}</span>
-              </div>
-            ))}
-          </div>
+
         </div>
       </main>
     </div>
